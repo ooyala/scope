@@ -16,8 +16,8 @@ module Scope
         @contexts = [Context.new("")]
         @context_for_test = {}
 
-        # The tests defined in this test case. MiniTest::Unit::TestCase sorts these the test methods randomly
-        # or alphabetically. Let's run them in the order they were defined, as that's least surprising.
+        # The tests defined in this test case. MiniTest::Unit::TestCase sorts these methods randomly or
+        # alphabetically. Let's run them in the order they were defined, as that's least surprising.
         def test_methods()
           tests = []
           stack = [@contexts.first]
@@ -58,7 +58,7 @@ module Scope
     def self.setup(&block) @contexts.last.add_setup(&block) end
     def self.teardown(&block) @contexts.last.add_teardown(&block) end
 
-    # setup_once blocks are only run just once for a context, and not on a per-test basis. They are useful
+    # setup_once blocks are run just once for a context, and not on a per-test basis. They are useful
     # for integration tests with costly setup.
     def self.setup_once(&block) @contexts.last.add_setup_once(&block) end
     def self.teardown_once(&block) @contexts.last.add_teardown_once(&block) end
@@ -73,7 +73,7 @@ module Scope
       @focus_next_test = true
     end
 
-    # This is called by the MiniTest framework. This TestCase class is instantiated once per test method
+    # run() is called by the MiniTest framework. This TestCase class is instantiated once per test method
     # defined, and then run() is called on each test case instance.
     def run(test_runner)
       test_name = self.__name__
