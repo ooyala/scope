@@ -2,8 +2,11 @@ require "minitest/unit"
 
 module Scope
   # A test case which provides nested contexts. Subclasses will have the "setup", "teardown", and "should"
-  # methods added to them as class methods.
+  # methods available as class methods.
   class ContextTestCase < MiniTest::Unit::TestCase
+    # A map of test name => Context.
+    def self.context_for_test() @context_for_test end
+
     def self.inherited(subclass)
       # Calling Unit::TestCase's inherited() method is important, as that's how it registers test suites.
       super
@@ -13,8 +16,8 @@ module Scope
         @contexts = [Context.new("")]
         @context_for_test = {}
 
-        # MiniTest::Unit::TestCase sorts these the test methods either randomly or alphabetically. Let's
-        # instead run them in the order in which they were defined, as that's least surprising.
+        # The tests defined in this test case. MiniTest::Unit::TestCase sorts these the test methods randomly
+        # or alphabetically. Let's run them in the order they were defined, as that's least surprising.
         def test_methods()
           tests = []
           stack = [@contexts.first]
@@ -70,8 +73,8 @@ module Scope
       @focus_next_test = true
     end
 
-    def self.context_for_test() @context_for_test end
-
+    # This is called by the MiniTest framework. This TestCase class is instantiated once per test method
+    # defined, and then run() is called on each test case instance.
     def run(test_runner)
       test_name = self.__name__
       context = self.class.context_for_test[test_name]
