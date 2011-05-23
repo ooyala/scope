@@ -16,6 +16,7 @@ Example usage
 -------------
 
     require "scope"
+    require "minitest/autorun"
     
     class MarioTest < Scope::TestCase
       context "super mario" do
