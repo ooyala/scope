@@ -103,8 +103,8 @@ module Scope
     # the actual test method), and then completes the teardown work.
     def run_setup_and_teardown(test_case_instance, test_name)
       contexts = ([self] + ancestor_contexts).reverse
-      contexts.each { |context| context.setup_once.call if context.setup_once }
       # We're using instance_eval so that instance vars set by the block are created on the test_case_instance
+      contexts.each { |context| test_case_instance.instance_eval(&context.setup_once) if context.setup_once }
       contexts.each { |context| test_case_instance.instance_eval(&context.setup) if context.setup }
       yield
       contexts.reverse!
@@ -112,11 +112,11 @@ module Scope
 
       # If this is the last context being run in any parent contexts, run their teardown_once blocks.
       if tests_and_subcontexts.last == test_name
-        teardown_once.call if teardown_once
+        test_case_instance.instance_eval(&teardown_once) if teardown_once
         descendant_context = self
         ancestor_contexts.each do |ancestor|
           break unless ancestor.tests_and_subcontexts.last == descendant_context
-          ancestor.teardown_once.call if ancestor.teardown_once
+          test_case_instance.instance_eval(&ancestor.teardown_once) if ancestor.teardown_once
           descendant_context = ancestor
         end
       end
@@ -135,7 +135,7 @@ module Scope
     private
     def run_only_once(block)
       has_run = false
-      Proc.new { block.call unless has_run; has_run = true }
+      Proc.new { instance_eval(&block) unless has_run; has_run = true }
     end
   end
 end
