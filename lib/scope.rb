@@ -47,7 +47,7 @@ module Scope
         @focus_next_test = false
       end
 
-      context_name = @contexts[1..-1].map(&:name).join(" ")
+      context_name = @contexts[1..-1].map { |context| context.name }.join(" ")
       context_name += " " unless context_name.empty?
       test_method_name = "#{context_name}should #{name}"
       define_method test_method_name, block
