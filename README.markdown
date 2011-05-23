@@ -1,4 +1,4 @@
-Scope - concise Ruby unit testing
+Scope -- concise Ruby unit testing
 =================================
 
 Scope is a micro Ruby unit testing framework in the spirit of Shoulda and others. It gives you a tight syntax for writing terse, readable unit tests.
@@ -45,7 +45,7 @@ Example usage
       end
     end
 
-Setup\_once and teardown\_once
+setup\_once and teardown\_once
 ----------------------------
 Scope supports "setup\_once" and "teardown\_once" blocks, which are useful when writing integration tests. If you have some expensive setup code that you want to share across many of your integration tests (e.g. fetching a file, or making real API requests) then use setup_once:
 
@@ -69,7 +69,7 @@ Scope supports "setup\_once" and "teardown\_once" blocks, which are useful when 
 
 You'll notice that variables created in setup_once blocks need to be class variables (e.g. @@youtube_api). This is because new instances of a testcase class are created every time a test is run. If you used simply instance variables, they would be lost when the next test is run.
 
-Focus
+focus
 -----
 You can use the `focus` method to indicate that only a single test should be run. When hacking on or troubleshooting tests, this is usually more convenient than running your test with command line parameters (-n). It's also super useful if you're using [watchr](https://github.com/mynyml/watchr) to run your tests.
 
