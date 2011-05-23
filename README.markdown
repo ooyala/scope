@@ -1,4 +1,4 @@
-Scope -- concise Ruby unit testing
+Scope - concise Ruby unit testing
 =================================
 
 Scope is a micro Ruby unit testing framework in the spirit of Shoulda and others. It gives you a tight syntax for writing terse, readable unit tests.
