@@ -55,13 +55,13 @@ module Scope
       @context_for_test[test_method_name] = @contexts.last
     end
 
-    def self.setup(&block) @contexts.last.add_setup(&block) end
-    def self.teardown(&block) @contexts.last.add_teardown(&block) end
+    def self.setup(&block) @contexts.last.setup= block end
+    def self.teardown(&block) @contexts.last.teardown = block end
 
     # setup_once blocks are run just once for a context, and not on a per-test basis. They are useful
     # for integration tests with costly setup.
-    def self.setup_once(&block) @contexts.last.add_setup_once(&block) end
-    def self.teardown_once(&block) @contexts.last.add_teardown_once(&block) end
+    def self.setup_once(&block) @contexts.last.setup_once = block end
+    def self.teardown_once(&block) @contexts.last.teardown_once = block end
 
     # "Focuses" the next test that's defined after this method is called, ensuring that only that test is run.
     def self.focus
@@ -80,7 +80,7 @@ module Scope
       context = self.class.context_for_test[test_name]
       result = nil
       # Unit::TestCase's implementation of run() invokes the test method (test_name) with exception handling.
-      context.run_setup_and_teardown(test_name) { result = super }
+      context.run_setup_and_teardown(self, test_name) { result = super }
       result
     end
   end
@@ -91,6 +91,7 @@ module Scope
     # We keep both tests and subcontexts in the same array because we need to know what the very last thing
     # to execute inside of this context is, for the purpose of calling teardown_once at the correct time.
     attr_accessor :tests_and_subcontexts
+    attr_accessor :setup, :teardown, :setup_once, :teardown_once
 
     def initialize(name, parent_context = nil)
       @name = name
@@ -100,21 +101,22 @@ module Scope
 
     # Runs the setup work for this context and any parent contexts, yields to the block (which should invoke
     # the actual test method), and then completes the teardown work.
-    def run_setup_and_teardown(test_name)
-      contexts = ([self] + self.ancestor_contexts).reverse
-      contexts.each(&:setup_once)
-      contexts.each(&:setup)
+    def run_setup_and_teardown(test_case_instance, test_name)
+      contexts = ([self] + ancestor_contexts).reverse
+      contexts.each { |context| context.setup_once.call if context.setup_once }
+      # We're using instance_eval so that instance vars set by the block are created on the test_case_instance
+      contexts.each { |context| test_case_instance.instance_eval(&context.setup) if context.setup }
       yield
       contexts.reverse!
-      contexts.each(&:teardown)
+      contexts.each { |context| test_case_instance.instance_eval(&context.teardown) if context.teardown }
 
       # If this is the last context being run in any parent contexts, run their teardown_once blocks.
       if tests_and_subcontexts.last == test_name
-        self.teardown_once
-        descendant_context = nil
-        contexts.each do |ancestor|
+        teardown_once.call if teardown_once
+        descendant_context = self
+        ancestor_contexts.each do |ancestor|
           break unless ancestor.tests_and_subcontexts.last == descendant_context
-          ancestor.teardown_once
+          ancestor.teardown_once.call if ancestor.teardown_once
           descendant_context = ancestor
         end
       end
@@ -127,18 +129,11 @@ module Scope
       ancestors
     end
 
-    def add_setup(&block) @setup = block end
-    def add_teardown(&block) @teardown = block end
-    def add_setup_once(&block) @setup_once = run_only_once(&block) end
-    def add_teardown_once(&block) @teardown_once = run_only_once(&block) end
-
-    def setup() @setup.call if @setup end
-    def teardown() @teardown.call if @teardown end
-    def setup_once() @setup_once.call if @setup_once end
-    def teardown_once() @teardown_once.call if @teardown_once end
+    def teardown_once=(block) @teardown_once = run_only_once(block) end
+    def setup_once=(block) @setup_once = run_only_once(block) end
 
     private
-    def run_only_once(&block)
+    def run_only_once(block)
       has_run = false
       Proc.new { block.call unless has_run; has_run = true }
     end
