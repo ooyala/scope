@@ -1,9 +1,9 @@
 require "minitest/unit"
 
 module Scope
-  # A test case which provides nested contexts. Subclasses will have the "setup", "teardown", and "should"
-  # methods available as class methods.
-  class ContextTestCase < MiniTest::Unit::TestCase
+  # A test case class which provides nested contexts. Subclasses will have the "setup", "teardown", and
+  # "should" methods available as class methods.
+  class TestCase < MiniTest::Unit::TestCase
     # A map of test name => Context.
     def self.context_for_test() @context_for_test end
 
