@@ -79,8 +79,14 @@ module Scope
       test_name = self.__name__
       context = self.class.context_for_test[test_name]
       result = nil
-      # Unit::TestCase's implementation of run() invokes the test method (test_name) with exception handling.
-      context.run_setup_and_teardown(self, test_name) { result = super }
+      begin
+        # Unit::TestCase's implementation of run() invokes the test method with exception handling.
+        context.run_setup_and_teardown(self, test_name) { result = super }
+      rescue *MiniTest::Unit::TestCase::PASSTHROUGH_EXCEPTIONS
+        raise
+      rescue Exception => error
+        result = test_runner.puke(self.class, self.__name__, error)
+      end
       result
     end
   end
