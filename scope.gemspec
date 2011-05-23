@@ -8,8 +8,8 @@ Gem::Specification.new do |s|
   s.author = "Phil Crosby"
   s.email = "phil.crosby@gmail.com"
 
-  s.description = ""
-  s.summary = ""
+  s.description = "Concise unit testing in the spirit of Shoulda"
+  s.summary = "Concise unit testing in the spirit of Shoulda"
   s.homepage = "http://github.com/ooyala/scope"
   s.rubyforge_project = "scope"
 
@@ -17,5 +17,5 @@ Gem::Specification.new do |s|
     scope.gemspec
     lib/scope.rb
   )
-  s.add_dependency("mini-test")
+  s.add_dependency("minitest")
 end
