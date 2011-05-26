@@ -12,6 +12,10 @@ Features
 * The ability to call focus() before a test method to have only that method run. Very useful when writing and troubleshooting tests.
 * Built on top of minitest, which is Ruby 1.9's official replacement for test/unit. Minitest is a gem and works in Ruby 1.8 as well.
 
+Installation
+------------
+gem install scope
+
 Example usage
 -------------
 
