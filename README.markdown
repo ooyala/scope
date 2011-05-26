@@ -36,7 +36,7 @@ Example usage
 
           should "end the game if mario walks into an enemy turtle" do
             @game.mario.move(:x => 10, :y => 0)
-            assert.equal "game_over" @game.state
+            assert_equal "game_over", @game.state
           end
         end
 
@@ -67,7 +67,7 @@ Scope supports "setup\_once" and "teardown\_once" blocks, which are useful when 
       ...
     end
 
-You'll notice that variables created in setup_once blocks need to be class variables (e.g. @@youtube_api). This is because new instances of a testcase class are created every time a test is run. If you used simply instance variables, they would be lost when the next test is run.
+You'll notice that variables created in setup\_once blocks need to be class variables (e.g. @@youtube_api). This is because new instances of a testcase class are created every time a test is run. If you used simply instance variables, they would be lost when the next test is run.
 
 focus
 -----
