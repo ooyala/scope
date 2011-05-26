@@ -47,7 +47,7 @@ Example usage
 
 Installation
 ------------
-gem install scope
+`gem install scope`
 
 setup\_once and teardown\_once
 ----------------------------
