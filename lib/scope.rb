@@ -131,7 +131,7 @@ module Scope
         # The ensure block guarantees that this context's teardown blocks will be run, even in an exception
         # is thrown in a descendant context or in the test itself.
         test_case_instance.instance_eval(&outer_context.teardown) if outer_context.teardown
-        if outer_context.should_run_teardown_once? test_name
+        if outer_context.name_of_last_test == test_name
           test_case_instance.instance_eval(&outer_context.teardown_once) if outer_context.teardown_once
         end
       end
@@ -150,12 +150,23 @@ module Scope
       ancestors
     end
 
-    def should_run_teardown_once?(test_name)
-      # This handling of the empty context is not strictly correct; we should really do a DFS of the context
-      # tree to find the last actual test, before which the teardown_once block should be run.
-      return false if tests_and_subcontexts.empty?
-      return (test_name == tests_and_subcontexts.last) if tests_and_subcontexts.last.is_a? String
-      return tests_and_subcontexts.last.should_run_teardown_once?(test_name)
+    # Returns the name of the last actual test within this context (including within its descendant contexts),
+    # or nil if none exists.
+    def name_of_last_test
+      unless defined? @name_of_last_test
+        @name_of_last_test = nil
+        tests_and_subcontexts.reverse.each do |test_or_context|
+          if test_or_context.is_a? String
+            @name_of_last_test = test_or_context
+            break
+          end
+          unless test_or_context.name_of_last_test.nil?
+            @name_of_last_test = test_or_context.name_of_last_test
+            break
+          end
+        end
+      end
+      @name_of_last_test
     end
   end
 end
