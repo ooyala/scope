@@ -121,14 +121,19 @@ module Scope
       # We're using instance_eval so that instance vars set by the block are created on the test_case_instance
       test_case_instance.instance_eval(&outer_context.setup_once) if outer_context.setup_once
       test_case_instance.instance_eval(&outer_context.setup) if outer_context.setup
-      if contexts.empty?
-        runner_proc.call
-      else
-        recursively_run_setup_and_teardown(test_case_instance, test_name, contexts, runner_proc)
-      end
-      test_case_instance.instance_eval(&outer_context.teardown) if outer_context.teardown
-      if outer_context.should_run_teardown_once? test_name
-        test_case_instance.instance_eval(&outer_context.teardown_once) if outer_context.teardown_once
+      begin
+        if contexts.empty?
+          runner_proc.call
+        else
+          recursively_run_setup_and_teardown(test_case_instance, test_name, contexts, runner_proc)
+        end
+      ensure
+        # The ensure block guarantees that this context's teardown blocks will be run, even in an exception
+        # is thrown in a descendant context or in the test itself.
+        test_case_instance.instance_eval(&outer_context.teardown) if outer_context.teardown
+        if outer_context.should_run_teardown_once? test_name
+          test_case_instance.instance_eval(&outer_context.teardown_once) if outer_context.teardown_once
+        end
       end
     end
 
