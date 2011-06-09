@@ -81,7 +81,7 @@ module Scope
       result = nil
       begin
         # Unit::TestCase's implementation of run() invokes the test method with exception handling.
-        context.run_setup_and_teardown(self, test_name) { result = super }
+        context.run_setup_and_teardown(self, test_name) { result = super(test_runner) }
       rescue *MiniTest::Unit::TestCase::PASSTHROUGH_EXCEPTIONS
         raise
       rescue Exception => error
@@ -107,27 +107,37 @@ module Scope
 
     # Runs the setup work for this context and any parent contexts, yields to the block (which should invoke
     # the actual test method), and then completes the teardown work.
-    def run_setup_and_teardown(test_case_instance, test_name)
+    def run_setup_and_teardown(test_case_instance, test_name, &runner_proc)
       contexts = ([self] + ancestor_contexts).reverse
-      # We're using instance_eval so that instance vars set by the block are created on the test_case_instance
-      contexts.each { |context| test_case_instance.instance_eval(&context.setup_once) if context.setup_once }
-      contexts.each { |context| test_case_instance.instance_eval(&context.setup) if context.setup }
-      yield
-      contexts.reverse!
-      contexts.each { |context| test_case_instance.instance_eval(&context.teardown) if context.teardown }
+      recursively_run_setup_and_teardown(test_case_instance, test_name, contexts, runner_proc)
+    end
 
-      # If this is the last context being run in any parent contexts, run their teardown_once blocks.
-      if tests_and_subcontexts.last == test_name
-        test_case_instance.instance_eval(&teardown_once) if teardown_once
-        descendant_context = self
-        ancestor_contexts.each do |ancestor|
-          break unless ancestor.tests_and_subcontexts.last == descendant_context
-          test_case_instance.instance_eval(&ancestor.teardown_once) if ancestor.teardown_once
-          descendant_context = ancestor
-        end
+    def teardown_once=(block) @teardown_once = run_only_once(block) end
+    def setup_once=(block) @setup_once = run_only_once(block) end
+
+    private
+    def recursively_run_setup_and_teardown(test_case_instance, test_name, contexts, runner_proc)
+      outer_context = contexts.slice! 0
+      # We're using instance_eval so that instance vars set by the block are created on the test_case_instance
+      test_case_instance.instance_eval(&outer_context.setup_once) if outer_context.setup_once
+      test_case_instance.instance_eval(&outer_context.setup) if outer_context.setup
+      if contexts.empty?
+        runner_proc.call
+      else
+        recursively_run_setup_and_teardown(test_case_instance, test_name, contexts, runner_proc)
+      end
+      test_case_instance.instance_eval(&outer_context.teardown) if outer_context.teardown
+      if outer_context.should_run_teardown_once? test_name
+        test_case_instance.instance_eval(&outer_context.teardown_once) if outer_context.teardown_once
       end
     end
 
+    def run_only_once(block)
+      has_run = false
+      Proc.new { instance_eval(&block) unless has_run; has_run = true }
+    end
+
+    protected
     def ancestor_contexts
       ancestors = []
       parent = self
@@ -135,13 +145,12 @@ module Scope
       ancestors
     end
 
-    def teardown_once=(block) @teardown_once = run_only_once(block) end
-    def setup_once=(block) @setup_once = run_only_once(block) end
-
-    private
-    def run_only_once(block)
-      has_run = false
-      Proc.new { instance_eval(&block) unless has_run; has_run = true }
+    def should_run_teardown_once?(test_name)
+      # This handling of the empty context is not strictly correct; we should really do a DFS of the context
+      # tree to find the last actual test, before which the teardown_once block should be run.
+      return false if tests_and_subcontexts.empty?
+      return (test_name == tests_and_subcontexts.last) if tests_and_subcontexts.last.is_a? String
+      return tests_and_subcontexts.last.should_run_teardown_once?(test_name)
     end
   end
 end
