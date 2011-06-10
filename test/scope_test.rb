@@ -67,10 +67,8 @@ end
 expected = %W(
   setup_once
   setup A teardown
-  context:setup_once
-    setup context:setup context:Z context:teardown teardown
-    setup context:setup context:A context:teardown teardown
-  context:teardown_once
+  setup context:setup_once context:setup context:Z context:teardown teardown
+  setup context:setup context:A context:teardown context:teardown_once teardown
   teardown_once
 )
 
