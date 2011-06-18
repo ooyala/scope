@@ -9,7 +9,7 @@ Features
 * 150 lines of code, so it's very easy to understand and enhance.
 * Tests are run in the order you define them in, instead of alphabetically or randomly, which follows the principle of least surprise.
 * setup\_once and teardown\_once, for writing integration tests (see below for details).
-* The ability to call focus() before a test method to have only that method run. Very useful when writing and troubleshooting tests.
+* The ability to call focus() before a test method or context to have only that method/context run. Very useful when writing and troubleshooting tests.
 * Built on top of minitest, which is Ruby 1.9's official replacement for test/unit. Minitest is a gem and works in Ruby 1.8 as well.
 
 Example usage
@@ -75,7 +75,7 @@ You'll notice that variables created in setup\_once blocks need to be class vari
 
 focus
 -----
-You can use the `focus` method to indicate that only a single test should be run. When hacking on or troubleshooting tests, this is usually more convenient than running your test with command line parameters (-n). It's also super useful if you're using [watchr](https://github.com/mynyml/watchr) to run your tests.
+You can use the `focus` method to indicate that only a single test/context should be run. When hacking on or troubleshooting tests, this is usually more convenient than running your test with command line parameters (-n). It's also super useful if you're using [watchr](https://github.com/mynyml/watchr) to run your tests.
 
     should "decrease file count when files are removed" do
       assert_equal 2, @directory.file_count
