@@ -32,19 +32,26 @@ module Scope
     end
 
     def self.context(name, &block)
+      context_focused = false
+      if @focus_enabled && @focus_next_test_or_context
+        @focus_next_test_or_context = false
+        @inside_focused_context = true
+        context_focused = true
+      end
       parent = @contexts.last
       new_context = Context.new(name, parent)
       parent.tests_and_subcontexts << new_context
       @contexts << new_context
       block.call
       @contexts.pop
+      @inside_focused_context = false if context_focused
     end
 
     def self.should(name, &block)
       # When focus_enabled is true, we'll only be running the next should() block that gets defined.
       if @focus_enabled
-        return unless @focus_next_test
-        @focus_next_test = false
+        return unless @focus_next_test_or_context || @inside_focused_context
+        @focus_next_test_or_context &&= false
       end
 
       context_name = @contexts[1..-1].map { |context| context.name }.join(" ")
@@ -63,14 +70,16 @@ module Scope
     def self.setup_once(&block) @contexts.last.setup_once = block end
     def self.teardown_once(&block) @contexts.last.teardown_once = block end
 
-    # "Focuses" the next test that's defined after this method is called, ensuring that only that test is run.
+    # "Focuses" the next test or context that's defined after this method is called, ensuring that only that
+    # test/context is run.
     def self.focus
-      # Since we're focusing only the next test, remove any tests which were already defined.
+      # Since we're focusing only the next test/context, remove any tests which were already defined.
       context_for_test.values.uniq.each do |context|
         context.tests_and_subcontexts.reject! { |test| test.is_a?(String) }
       end
       @focus_enabled = true
-      @focus_next_test = true
+      @focus_next_test_or_context = true
+      @inside_focused_context = false
     end
 
     # run() is called by the MiniTest framework. This TestCase class is instantiated once per test method
