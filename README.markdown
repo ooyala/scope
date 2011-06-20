@@ -96,4 +96,7 @@ Licensed under the [MIT license](http://www.opensource.org/licenses/mit-license.
 
 Credits
 -------
-Phil Crosby (twitter @philcrosby)
+
+    Phil Crosby (twitter @philcrosby)
+    Harry Robertson (github harob)
+
