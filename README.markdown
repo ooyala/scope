@@ -17,7 +17,7 @@ Example usage
 
     require "scope"
     require "minitest/autorun"
-    
+
     class MarioTest < Scope::TestCase
       context "super mario" do
         setup do
@@ -58,7 +58,7 @@ Scope supports "setup\_once" and "teardown\_once" blocks, which are useful when 
         @@youtube_api = YouYubeApi.connect("my_username", "my_password")
         @@new_video = @@youtube_api.create_video(:name => "Never gonna give you up", :size => 12_282_831)
       end
-  
+
       should "add video to a channel" do
         @@my_youtube_channel.add(@@new_video.id)
         assert_equal @@my_youtube_channel.lineup.include?(@@new_video.id)
