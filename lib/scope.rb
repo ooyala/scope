@@ -89,11 +89,12 @@ module Scope
       context = self.class.context_for_test[test_name]
       result = nil
       begin
-        # Unit::TestCase's implementation of run() invokes the test method with exception handling.
         begin
+          # Run any defined setup method on the instance (typically empty) *before* running setup blocks.
           self.setup
           old_setup = self.method(:setup)
           def self.setup; end
+          # Unit::TestCase's implementation of run() invokes the test method with exception handling.
           context.run_setup_and_teardown(self, test_name) { result = super(test_runner) }
         ensure
           def self.setup; old_setup; end
