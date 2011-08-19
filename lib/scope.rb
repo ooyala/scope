@@ -90,7 +90,9 @@ module Scope
       result = nil
       begin
         begin
-          # Run any defined setup method on the instance (typically empty) *before* running setup blocks.
+          # Prevent super from calling the minitest setup after the Scope setup blocks have already run. The
+          # motivation is that RR puts hooks into setup to reset stubs and mocks and this needs to happen
+          # *before* the test setup occurs.
           self.setup
           old_setup = self.method(:setup)
           def self.setup; end
