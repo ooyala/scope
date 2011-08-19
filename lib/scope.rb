@@ -90,7 +90,14 @@ module Scope
       result = nil
       begin
         # Unit::TestCase's implementation of run() invokes the test method with exception handling.
-        context.run_setup_and_teardown(self, test_name) { result = super(test_runner) }
+        begin
+          self.setup
+          old_setup = self.method(:setup)
+          def self.setup; end
+          context.run_setup_and_teardown(self, test_name) { result = super(test_runner) }
+        ensure
+          def self.setup; old_setup; end
+        end
       rescue *MiniTest::Unit::TestCase::PASSTHROUGH_EXCEPTIONS
         raise
       rescue Exception => error

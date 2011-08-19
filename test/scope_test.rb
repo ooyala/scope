@@ -1,11 +1,10 @@
 require "rubygems"
 require File.expand_path(File.dirname(__FILE__) + "/../lib/scope.rb")
 
-class ScopeTest < Scope::TestCase
-  @@has_run = []
+$has_run = []
 
-  def has_run(name) @@has_run.push(name) end
-  def self.tests_executed() @@has_run end
+class ScopeTest < Scope::TestCase
+  def has_run(name) $has_run.push(name) end
 
   setup_once do
     has_run "setup_once"
@@ -54,9 +53,22 @@ class ScopeTest < Scope::TestCase
   end
 end
 
-#
-# I know, I know -- it's not using scope to run itself. Meta-fail.
-#
+# Test when the instance method setup/teardown are run.
+module Scope
+  class TestCase
+    alias_method :new_setup, :setup
+    def new_setup
+      $has_run.push "minitest_setup"
+    end
+    alias_method :setup, :new_setup
+
+    alias_method :new_teardown, :teardown
+    def new_teardown
+      $has_run.push "minitest_teardown"
+    end
+    alias_method :teardown, :new_teardown
+  end
+end
 
 ScopeTest.test_methods.each do |test_name|
   # This simulates MiniTest's run() method.
@@ -65,15 +77,18 @@ ScopeTest.test_methods.each do |test_name|
 end
 
 expected = %W(
+  minitest_setup
   setup_once
-  setup A teardown
-  setup context:setup_once context:setup context:Z context:teardown teardown
-  setup context:setup context:A context:teardown context:teardown_once teardown
+  setup A minitest_teardown teardown
+  minitest_setup
+  setup context:setup_once context:setup context:Z minitest_teardown context:teardown teardown
+  minitest_setup
+  setup context:setup context:A minitest_teardown context:teardown context:teardown_once teardown
   teardown_once
 )
 
-if expected != ScopeTest.tests_executed
-  puts "Expected\n#{expected.inspect}\n but was\n#{ScopeTest.tests_executed.inspect}"
+if expected != $has_run
+  puts "Expected\n#{expected.inspect}\n but was\n#{$has_run.inspect}"
   exit 1
 else
   puts "Success."
