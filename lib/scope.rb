@@ -111,7 +111,7 @@ module Scope
       rescue Exception => error
         @passed = false
         time = Time.now - start_time
-        runner.record self.class, self.__name__, self._assertions, time, error
+        test_runner.record self.class, self.__name__, self._assertions, time, error
         result = test_runner.puke(self.class, self.__name__, error)
       end
       result
