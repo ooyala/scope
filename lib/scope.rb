@@ -88,11 +88,16 @@ module Scope
       test_name = self.__name__
       context = self.class.context_for_test[test_name]
       result = nil
+      start_time = Time.now
+
       begin
         begin
           # Prevent super from calling the minitest setup after the Scope setup blocks have already run. The
           # motivation is that RR puts hooks into setup to reset stubs and mocks and this needs to happen
           # *before* the test setup occurs.
+          # Make sure, if setup fails, that the exception is handled the same in super as here.
+          # This is required for reporters to notice the setup failure.
+          @passed = nil
           self.setup
           old_setup = self.method(:setup)
           def self.setup; end
@@ -104,6 +109,9 @@ module Scope
       rescue *MiniTest::Unit::TestCase::PASSTHROUGH_EXCEPTIONS
         raise
       rescue Exception => error
+        @passed = false
+        time = Time.now - start_time
+        test_runner.record self.class, self.__name__, self._assertions, time, error
         result = test_runner.puke(self.class, self.__name__, error)
       end
       result
