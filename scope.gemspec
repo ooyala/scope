@@ -18,4 +18,5 @@ Gem::Specification.new do |s|
     lib/scope.rb
   )
   s.add_dependency("minitest")
+  s.add_development_dependency("mocha")
 end

@@ -1,7 +1,6 @@
-require "rubygems"
-require File.expand_path(File.dirname(__FILE__) + "/../lib/scope.rb")
-gem "mocha"
-require "mocha/api"
+# TODO(corey): This test has reached the size where some cleanup is required.
+require "scope"
+require "mocha/setup"
 
 $has_run = []
 
@@ -72,11 +71,30 @@ module Scope
   end
 end
 
-PassingTests.test_methods.each do |test_name|
-  # This simulates MiniTest's run() method.
-  instance = PassingTests.new(test_name)
-  instance.run(nil)
+begin
+  PassingTests.test_methods.each do |test_name|
+    include Mocha::API
+
+    # Record is expected but no puke.
+    test_runner = mock('test_runner') do
+      expects(:record)
+    end
+
+    test_runner.mocha_setup
+
+    # This simulates MiniTest's run() method.
+    instance = PassingTests.new(test_name)
+    # TODO(corey): I recall this working before exec "bundle install".
+    instance.run(test_runner)
+
+    test_runner.mocha_verify
+  end
+rescue
+  puts "run did not call record on test_runner as expected"
+  raise
 end
+
+puts "run called record on test_runner as expected"
 
 expected = %W(
   minitest_setup
@@ -111,20 +129,25 @@ end
 
 # Runs the failing test and verifies both record and puke are called on the test runner.
 # The standard minitest running calls both record and puke.
-SetupFailureTest.test_methods.each do |test_name|
-  include Mocha::API
+begin
+  SetupFailureTest.test_methods.each do |test_name|
+    include Mocha::API
 
-  test_runner = mock('test_runner') do
-    expects(:record)
-    expects(:puke)
+    test_runner = mock('test_runner') do
+      expects(:record)
+      expects(:puke)
+    end
+
+    test_runner.mocha_setup
+
+    instance = SetupFailureTest.new(test_name)
+    instance.run(test_runner)
+
+    test_runner.mocha_verify
   end
-
-  test_runner.mocha_setup
-
-  instance = SetupFailureTest.new(test_name)
-  instance.run(test_runner)
-
-  test_runner.mocha_verify
+rescue
+  puts "exception thrown during setup did not call record then puke as expected"
+  raise
 end
 
-puts "Success handling failures during setup"
+puts "exception thrown during setup did call record then puke as exepected"
